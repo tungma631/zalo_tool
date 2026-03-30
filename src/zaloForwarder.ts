@@ -264,7 +264,7 @@ export class ZaloForwarder extends EventEmitter {
                     try {
                         const dims = await sharp(buffer).metadata();
                         attachmentsArray.push({
-                            data: Readable.from(buffer),
+                            data: buffer,
                             filename: `img_${Date.now()}.jpg`,
                             metadata: { totalSize: buffer.length, width: dims.width || 1080, height: dims.height || 1080 }
                         });

@@ -8,6 +8,7 @@
     "obfuscate:setup": "node -e \"const f=require('fs'); f.cpSync('ui', 'ui-obf', {recursive:true});\"",
     "build:prod": "tsc && javascript-obfuscator dist --output dist --compact true --control-flow-flattening true --target node && npm run obfuscate:setup && javascript-obfuscator ui-obf --output ui-obf --compact true --control-flow-flattening true --target browser",
     "pack-app": "npm run build:prod && electron-builder --win dir",
+    "pack-linux": "npm run build:prod && electron-builder --linux AppImage",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -39,6 +40,10 @@
     },
     "win": {
       "target": "dir"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Network"
     },
     "files": [
       "dist",

@@ -1,0 +1,51 @@
+{
+  "name": "zalo-tool02",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/main.js",
+  "scripts": {
+    "start": "tsc && electron .",
+    "obfuscate:setup": "node -e \"const f=require('fs'); f.cpSync('ui', 'ui-obf', {recursive:true});\"",
+    "build:prod": "tsc && javascript-obfuscator dist --output dist --compact true --control-flow-flattening true --target node && npm run obfuscate:setup && javascript-obfuscator ui-obf --output ui-obf --compact true --control-flow-flattening true --target browser",
+    "pack-app": "npm run build:prod && electron-builder --win dir",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "fs-extra": "^11.3.4",
+    "node-machine-id": "^1.1.12",
+    "qrcode-terminal": "^0.12.0",
+    "sharp": "^0.34.5",
+    "undici": "^6.24.1",
+    "zca-js": "^2.1.2"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^25.5.0",
+    "electron": "^41.1.0",
+    "electron-builder": "^24.13.3",
+    "javascript-obfuscator": "^5.4.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.2"
+  },
+  "build": {
+    "appId": "com.zalo.pro",
+    "productName": "ZaloMarketingPro",
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "dir"
+    },
+    "files": [
+      "dist",
+      "package.json",
+      "node_modules",
+      {"from": "ui-obf", "to": "ui"}
+    ],
+    "asar": true
+  }
+}

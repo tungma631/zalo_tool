@@ -1,0 +1,36 @@
+{
+  "name": "antigravity_zalo",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "image-size": "^2.0.2",
+    "zca-js": "^2.1.2"
+  },
+  "devDependencies": {
+    "electron": "^41.1.0",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {
+    "appId": "com.zalo.forwardingpro",
+    "productName": "Zalo Forwarding Pro",
+    "directories": {
+      "output": "dist"
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "category": "Utility",
+      "executableName": "zalo-forward-pro"
+    },
+    "asar": true,
+    "files": [
+      "**/*",
+      "!dist",
+      "!node_modules/.cache"
+    ]
+  }
+}

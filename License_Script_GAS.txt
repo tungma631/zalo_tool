@@ -1,0 +1,93 @@
+const SHEET_NAME = 'Sheet1'; // <-- NHỚ ĐỔI THÀNH TÊN SHEET CỦA BẠN (vdu: Trang tính 1)
+
+function doGet(e) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+    if (!sheet) {
+      return responseJSON({ success: false, message: "Không tìm thấy Sheet. Hãy kiểm tra lại biến SHEET_NAME" });
+    }
+
+    // ĐỌC THAM SỐ TỪ URL (GET METHOD THAY VÌ POST ĐỂ TRÁNH LỖI HTML)
+    const action = e.parameter.action;
+    const key = e.parameter.key;
+    const hwid = e.parameter.hwid;
+
+    if (action === 'validate') {
+      const rows = sheet.getDataRange().getValues();
+      const headers = rows[0];
+      
+      const keyIdx = headers.indexOf('Key');
+      const hwidIdx = headers.indexOf('Hardware_ID');
+      const expiryIdx = headers.indexOf('Expiry_Date');
+      const statusIdx = headers.indexOf('Status');
+
+      for (let i = 1; i < rows.length; i++) {
+        let row = rows[i];
+        
+        // Match KEY
+        if (row[keyIdx] === key) {
+          
+          // 1. Kiểm tra Status (Banned/Revoked)
+          const status = String(row[statusIdx]).toUpperCase();
+          if (status === 'BANNED' || status === 'BLOCK') {
+            return responseJSON({ success: false, message: "Key này đã bị khoá bởi Admin." });
+          }
+
+          // 2. Kiểm tra Expiry_Date (Hạn sử dụng)
+          if (row[expiryIdx]) {
+            const expiryDate = new Date(row[expiryIdx]);
+            if (!isNaN(expiryDate.getTime()) && new Date() > expiryDate) {
+              return responseJSON({ success: false, message: "Key của bạn đã hết hạn sử dụng." });
+            }
+          }
+
+          // 3. Kiểm tra Hardware_ID (Mã Máy)
+          const savedHwid = String(row[hwidIdx] || "").trim();
+          
+          // NẾU LÀ KEY MỚI CÒN TRỐNG HWID -> LƯU MÃ MÁY MỚI VÀO
+          if (savedHwid === '') {
+            sheet.getRange(i + 1, hwidIdx + 1).setValue(hwid);
+            return responseJSON({ 
+              success: true, 
+              message: "Kích hoạt Key thành công thiết bị mới!",
+              expiry: row[expiryIdx] ? formatDate(row[expiryIdx]) : "Vĩnh viễn"
+            });
+          } 
+          // NẾU ĐÃ CÓ MÃ MÁY -> SO SÁNH
+          else if (savedHwid === hwid) {
+            return responseJSON({ 
+              success: true, 
+              message: "Đăng nhập thành công!",
+              expiry: row[expiryIdx] ? formatDate(row[expiryIdx]) : "Vĩnh viễn"
+            });
+          } 
+          // NẾU KHÔNG KHỚP MÃ MÁY
+          else {
+            return responseJSON({ success: false, message: "Lỗi: Key này đang được sử dụng ở một máy tính khác!" });
+          }
+        }
+      }
+      
+      return responseJSON({ success: false, message: "Lỗi: Key không tồn tại trên hệ thống!" });
+    }
+
+    return responseJSON({ success: false, message: "Action không hợp lệ" });
+
+  } catch (err) {
+    return responseJSON({ success: false, message: "Lỗi hệ thống: " + err.message });
+  }
+}
+
+// Hàm chuẩn hoá dữ liệu trả về cho Tool đọc
+function responseJSON(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// format
+function formatDate(dateObj) {
+  try {
+    const d = new Date(dateObj);
+    return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+  } catch(e) { return dateObj; }
+}

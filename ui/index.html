@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zalo Marketing Pro</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./forwarding.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Lớp chặn License Key -->
+    <div id="auth-overlay" style="position: fixed; inset: 0; background: linear-gradient(135deg, #1e293b, #0f172a); z-index: 999999; display: flex; align-items: center; justify-content: center; color: white;">
+
+        <!-- MÀN HÌNH CHỜ (MẶC ĐỊNH BẬT) -->
+        <div id="auth-loading-state" style="text-align: center;">
+            <div style="width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.1); border-top-color: #3b82f6; border-radius: 50%; animation: authSpin 1s linear infinite; margin: 0 auto 20px;"></div>
+            <h2 style="color: #94a3b8; font-size: 16px; font-weight: 500;">Đang xác thực bảo mật Server...</h2>
+            <style>@keyframes authSpin { to { transform: rotate(360deg); } }</style>
+        </div>
+
+        <!-- MÀN HÌNH BÁO LỖI / NHẬP KEY (BỊ ẨN NGAY TỪ ĐẦU) -->
+        <div id="auth-input-state" style="display: none; background: rgba(30, 41, 59, 1); padding: 40px; width: 400px; text-align: center; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <h1 style="color: #3b82f6; margin-bottom: 20px;">Xác Thực Phần Mềm</h1>
+            <p style="margin-bottom: 20px; font-size: 14px; color: #94a3b8;">Hệ thống yêu cầu License Key hợp lệ để khởi động. Mã máy của bạn:</p>
+            <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 13px; color: #a7f3d0; margin-bottom: 20px; word-break: break-all; overflow-wrap: break-word;" id="auth-hwid">Đang lấy mã...</div>
+            <p id="auth-error-msg" style="color: #ef4444; font-size: 13px; margin-bottom: 10px; display: none;"></p>
+            <input type="text" id="auth-key-input" placeholder="Nhập Key (VD: ZL-1234)" style="width: calc(100% - 24px); box-sizing: border-box; padding: 12px; margin-bottom: 20px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: white; outline: none; text-align: center;" />
+            <button id="auth-btn-activate" class="btn primary" style="width: 100%;">Kích Hoạt</button>
+        </div>
+    </div>
+    <div class="sidebar">
+        <h2 class="logo">🚀 Zalo Pro</h2>
+        <ul class="nav">
+            <li class="active" data-target="tab-accounts">Quản lý Tài khoản</li>
+            <li data-target="tab-scraper">Quét Thành viên</li>
+            <li data-target="tab-dispatch">Gửi Tin nhắn</li>
+            <li data-target="tab-forward">Chuyển tiếp Tin (Auto)</li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <!-- TAB QUẢN LÝ TÀI KHOẢN -->
+        <div id="tab-accounts" class="tab-pane active">
+            <div class="header-section">
+                <h2>Quản lý Tài khoản</h2>
+                <button id="btnAddAccount" class="btn primary">Thêm Tài Khoản Mới</button>
+            </div>
+            
+            <div class="card">
+                <h3>Danh sách đã lưu</h3>
+                <ul id="accountList" class="account-list">
+                    <li>Đang tải...</li>
+                </ul>
+            </div>
+
+            <!-- Modal QR -->
+            <div id="qrModal" class="modal hidden">
+                <div class="modal-content text-center">
+                    <h3>Quét mã QR bằng App Zalo</h3>
+                    <div id="qrContainer" class="qr-container">
+                        <!-- Canvas qrcode -->
+                    </div>
+                    <p class="status-text" id="qrStatus">Đang lấy mã QR...</p>
+                    <button class="btn" id="btnCloseModal">Đóng</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB QUÉT THÀNH VIÊN -->
+        <div id="tab-scraper" class="tab-pane hidden">
+            <h2>Quét Thành Viên Nhóm</h2>
+            <div class="card">
+                <div class="form-group">
+                    <label>Tài khoản sử dụng để quét:</label>
+                    <select id="scrapeAccountSelect" class="form-control">
+                        <option value="">-- Chọn tài khoản --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Nguồn quét:</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="scrapeSource" value="account" checked> Tải từ danh sách nhóm của tài khoản</label>
+                        <label><input type="radio" name="scrapeSource" value="link"> Từ Link Zalo bất kỳ</label>
+                    </div>
+                </div>
+
+                <!-- Input tuỳ theo Nguồn -->
+                <div id="sourceAccountView" class="form-group">
+                    <label>Chọn nhóm:</label>
+                    <select id="groupSelect" class="form-control">
+                        <option value="">-- Vui lòng chọn tài khoản trước --</option>
+                    </select>
+                </div>
+
+                <div id="sourceLinkView" class="form-group hidden">
+                    <label>Nhập Link Zalo Group:</label>
+                    <input type="text" id="groupLinkInput" class="form-control" placeholder="https://zalo.me/g/...">
+                </div>
+
+                <button id="btnStartScan" class="btn primary full-width">Bắt đầu Quét</button>
+                <p id="scanStatus" class="mt-2 status-msg"></p>
+                <div id="scanResultsContainer" class="mt-2 hidden">
+                    <h3>Kết quả Quét: <span id="scanCountResult">0</span> thành viên</h3>
+                    <p class="status-text">Chuyển sang tab "Gửi Tin nhắn" để chọn mục tiêu và bắt đầu gửi tin.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB GỬI TIN NHẮN -->
+        <div id="tab-dispatch" class="tab-pane hidden">
+            <h2>Chiến dịch Gửi Tin Nhắn</h2>
+            
+            <!-- Danh sách thành viên để gửi -->
+            <div class="card mb-3">
+                <div class="header-section" style="margin-bottom: 10px;">
+                    <h3>Danh sách Mục tiêu Nhận tin</h3>
+                    <div>
+                        <button id="btnSelectAll" class="btn secondary">Chọn Tất Cả</button>
+                        <button id="btnDeselectAll" class="btn secondary">Bỏ Chọn Tất Cả</button>
+                    </div>
+                </div>
+                
+                <div class="row" style="align-items: flex-end; margin-bottom: 15px;">
+                    <div class="col form-group" style="margin-bottom: 0;">
+                        <label>Chọn từ STT (Dòng):</label>
+                        <input type="number" id="rangeStartIndex" class="form-control" value="1" min="1">
+                    </div>
+                    <div class="col form-group" style="margin-bottom: 0;">
+                        <label>Đến STT (Dòng):</label>
+                        <input type="number" id="rangeEndIndex" class="form-control" value="50" min="1">
+                    </div>
+                    <div class="col" style="flex: 0 0 auto;">
+                        <button id="btnSelectRange" class="btn primary">Áp Dụng Khoảng</button>
+                    </div>
+                </div>
+
+                <div class="member-list-container">
+                    <table class="member-table">
+                        <thead>
+                            <tr>
+                                <th width="50">Chọn</th>
+                                <th width="60">STT</th>
+                                <th>Tên Người Dùng (Zalo)</th>
+                                <th>UID</th>
+                            </tr>
+                        </thead>
+                        <tbody id="targetMemberList">
+                            <tr><td colspan="4" class="text-center">Chưa có dữ liệu. Vui lòng Quét nhóm ở tab trước.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-2">
+                    <strong>Đang chọn: <span id="selectedCountText" style="color: var(--primary)">0</span> thành viên</strong>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Cấu hình Gửi</h3>
+                <div id="dispatchAccounts" class="checkbox-group mt-2 mb-3">
+                    <!-- Checkbox load từ JS -->
+                </div>
+
+                <div class="row mt-2 mb-3">
+                    <div class="col form-group" style="margin-bottom: 0;">
+                        <label>Min Delay (giây):</label>
+                        <input type="number" id="minDelay" class="form-control" value="30" min="1">
+                    </div>
+                    <div class="col form-group" style="margin-bottom: 0;">
+                        <label>Max Delay (giây):</label>
+                        <input type="number" id="maxDelay" class="form-control" value="60" min="1">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Nội dung tin nhắn (Hỗ trợ biến: <b>@name</b>, <b>@gender</b>):</label>
+                    <textarea id="messageContent" class="form-control" rows="4" placeholder="Ví dụ: Chào @gender @name, ..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Đính kèm hình ảnh (tuỳ chọn):</label>
+                    <div class="file-input-wrapper file-input-row">
+                        <button type="button" id="btnBrowseImage" class="btn secondary">Chọn Ảnh</button>
+                        <button type="button" id="btnClearImage" class="btn btn-ghost danger-text hidden">✕ Gỡ ảnh</button>
+                        <span id="selectedImagePath" class="ml-2 file-name-ellipsis">Chưa chọn file</span>
+                    </div>
+                </div>
+
+                <button type="button" id="btnStartSpam" class="btn danger full-width">Bắt đầu Gửi Tin</button>
+
+                <!-- Multi-Tab Logs (mỗi tab có thanh Tạm dừng / Tiếp tục / Dừng riêng theo account) -->
+                <div id="dynamicLogsContainer" class="mt-2 hidden">
+                    <div class="log-tabs" id="logTabsHeaders">
+                        <!-- Nút tab được code JS sinh ra -->
+                    </div>
+                    <div class="log-panes" id="logTabsContent">
+                        <!-- Nội dung tab được code JS sinh ra -->
+                    </div>
+                    <div class="mt-2 text-center" style="font-size: 13px;">
+                        <p class="mt-0">Trạng thái chung: <span id="spamStatusText" style="font-weight: 500;">Đang chờ...</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB CHUYỂN TIẾP TIN -->
+        <div id="tab-forward" class="tab-pane hidden">
+            <!-- Màn hình Đăng nhập -->
+            <div id="forward-login-view" class="view">
+                <div class="glass-card login-card">
+                    <div class="logo">Kết nối bộ Listen ngầm</div>
+                    <p id="forward-login-status">Đang kiểm tra kết nối...</p>
+                    <div id="qr-container">
+                        <img id="forward-qr-img" src="" alt="QR Code" style="display: none;">
+                    </div>
+                    <div class="loader" id="forward-login-loader"></div>
+                </div>
+            </div>
+
+            <!-- Màn hình Chính -->
+            <div id="forward-main-view" class="view" style="display: none;">
+                <header class="glass-header">
+                    <div class="brand">
+                        <h1>Zalo Forwarding Pro</h1>
+                        <span class="status-indicator online"></span>
+                    </div>
+                    <button id="forward-btn-logout" class="btn danger">Hủy kết nối</button>
+                </header>
+
+                <div class="content">
+                    <div class="config-panel">
+                        <div class="glass-module">
+                            <div class="module-header">
+                                <h2>Nhóm Nguồn (Nghe)</h2>
+                                <div class="header-actions" style="display: flex; gap: 8px; align-items: center;">
+                                    <button id="forward-btn-select-all-source" class="btn text-btn">Chọn tất cả</button>
+                                    <button id="forward-btn-unselect-all-source" class="btn text-btn">Bỏ chọn</button>
+                                    <span class="badge" id="forward-source-count">0</span>
+                                </div>
+                            </div>
+                            <div class="search-box">
+                                <input type="text" id="forward-search-source" placeholder="Tìm kiếm nhóm nguồn...">
+                            </div>
+                            <div class="list-container" id="forward-source-list"></div>
+                        </div>
+
+                        <div class="transfer-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </div>
+
+                        <div class="glass-module">
+                            <div class="module-header">
+                                <h2>Nhóm Đích (Gửi)</h2>
+                                <div class="header-actions" style="display: flex; gap: 8px; align-items: center;">
+                                    <button id="forward-btn-select-all-dest" class="btn text-btn">Chọn tất cả</button>
+                                    <button id="forward-btn-unselect-all-dest" class="btn text-btn">Bỏ chọn</button>
+                                    <span class="badge" id="forward-dest-count">0</span>
+                                </div>
+                            </div>
+                            <div class="search-box">
+                                <input type="text" id="forward-search-dest" placeholder="Tìm kiếm nhóm đích...">
+                            </div>
+                            <div class="list-container" id="forward-dest-list"></div>
+                        </div>
+                    </div>
+
+                    <div class="action-bar">
+                        <button id="forward-btn-save" class="btn primary">Lưu Cấu Hình Mới</button>
+                        <span id="forward-unsaved-warning" style="display: none; color: var(--danger); font-size: 13px; font-weight: bold;">⚠️ Bạn có thay đổi chưa được lưu!</span>
+                        <span id="forward-save-status"></span>
+                    </div>
+
+                    <div class="log-panel glass-module">
+                        <div class="log-header">
+                            <h3>Terminal Console (Gửi/Nhận ngầm)</h3>
+                            <button id="forward-btn-clear-log" class="btn text-btn">Xoá Log</button>
+                        </div>
+                        <div class="log-content" id="forward-log-window"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./renderer.js"></script>
+    <script src="./forwardingRenderer.js"></script>
+</body>
+</html>

@@ -4,6 +4,11 @@ import { AccountManager } from './account';
 import { scanGroupMembers } from './scraper';
 import { dispatchMessages, type SpamRunControl } from './dispatcher';
 import { ZaloForwarder } from './zaloForwarder';
+
+if (process.platform === 'linux') {
+    app.commandLine.appendSwitch('enable-features', 'UseOzonePlatform');
+    app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
+}
 import { LicenseManager } from './licenseManager';
 
 const licenseManager = new LicenseManager();

@@ -26,7 +26,13 @@ async function createWindow() {
             // Khuyến cáo tắt nodeIntegration và dùng preload cho bảo mật, nhưng có thể mở tạm nếu preload phức tạp
             nodeIntegration: false,
             contextIsolation: true,
+            devTools: false
         }
+    });
+
+    // Ngăn chặn hoàn toàn việc mở DevTools (Inspect Element)
+    mainWindow.webContents.on('devtools-opened', () => {
+        mainWindow.webContents.closeDevTools();
     });
 
     // mainWindow.webContents.openDevTools(); // Mở F12 debug

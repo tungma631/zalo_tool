@@ -6,7 +6,7 @@
   "scripts": {
     "start": "tsc && electron .",
     "obfuscate:setup": "node -e \"const f=require('fs'); f.cpSync('ui', 'ui-obf', {recursive:true});\"",
-    "build:prod": "tsc && javascript-obfuscator dist --output dist --compact true --control-flow-flattening true --target node && npm run obfuscate:setup && javascript-obfuscator ui-obf --output ui-obf --compact true --control-flow-flattening true --target browser",
+    "build:prod": "tsc && javascript-obfuscator dist --output dist --compact true --control-flow-flattening true --control-flow-flattening-threshold 0.75 --dead-code-injection true --dead-code-injection-threshold 0.4 --string-array true --string-array-encoding rc4 --string-array-calls-transform true --target node && npm run obfuscate:setup && javascript-obfuscator ui-obf --output ui-obf --compact true --control-flow-flattening true --control-flow-flattening-threshold 0.75 --dead-code-injection true --dead-code-injection-threshold 0.4 --string-array true --string-array-encoding base64 --string-array-calls-transform true --disable-console-output true --target browser",
     "pack-app": "npm run build:prod && electron-builder --win dir",
     "pack-linux": "npm run build:prod && electron-builder --linux AppImage",
     "test": "echo \"Error: no test specified\" && exit 1"
